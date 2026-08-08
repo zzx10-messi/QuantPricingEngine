@@ -1,0 +1,28 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+
+# pytest cache
+.pytest_cache/
+
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+
+# IDE settings
+.vscode/
+.idea/
+
+
+# OS files
+.DS_Store
+
+
+# Build files
+build/
+dist/
+*.egg-info/
