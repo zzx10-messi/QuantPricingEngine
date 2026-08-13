@@ -3,32 +3,51 @@ import pytest
 from src.instruments import EuropeanOption
 
 
-
 def test_create_call_option():
-
     option = EuropeanOption(
         strike=100,
         maturity=1,
-        option_type="call"
+        option_type="call",
     )
 
-
     assert option.strike == 100
-
     assert option.maturity == 1
-
     assert option.option_type == "call"
 
 
+def test_create_put_option():
+    option = EuropeanOption(
+        strike=100,
+        maturity=1,
+        option_type="put",
+    )
+    assert option.strike == 100
+    assert option.maturity == 1
+    assert option.option_type == "put"
+
 
 def test_invalid_strike():
-
-    with pytest.raises(
-        ValueError
-    ):
-
+    with pytest.raises(ValueError):
         EuropeanOption(
             strike=-100,
             maturity=1,
-            option_type="call"
+            option_type="call",
+        )
+
+
+def test_invalid_maturity():
+    with pytest.raises(ValueError):
+        EuropeanOption(
+            strike=100,
+            maturity=0,
+            option_type="call",
+        )
+
+
+def test_invalid_option_type():
+    with pytest.raises(ValueError):
+        EuropeanOption(
+            strike=100,
+            maturity=1,
+            option_type="straddle",
         )

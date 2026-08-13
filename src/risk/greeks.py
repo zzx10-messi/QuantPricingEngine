@@ -8,7 +8,7 @@ from src.models.black_scholes import BlackScholes
 
 class Greeks:
     """
-    Calculate option risk sensitivities.
+    Calculate option risk sensitivities using Black-Scholes analytical formulas.
 
     Supported Greeks:
     - Delta
@@ -16,271 +16,107 @@ class Greeks:
     - Vega
     - Theta
     - Rho
-
-    Currently based on Black-Scholes analytical formulas.
     """
 
-    def __init__(
-        self,
-        model: BlackScholes
-    ):
+    def __init__(self, model: BlackScholes):
         """
         Parameters
         ----------
         model : BlackScholes
             Pricing model used for Greek calculation.
         """
-
         self.model = model
-
 
     def _calculate_d1_d2(
         self,
         option: EuropeanOption,
-        market: MarketData
+        market: MarketData,
     ) -> tuple[float, float]:
         """
         Calculate d1 and d2.
 
         Returns
         -------
-        tuple
+        tuple[float, float]
             (d1, d2)
         """
-
-        d1 = self.model._calculate_d1(
-            option,
-            market
-        )
-
-        d2 = self.model._calculate_d2(
-            d1,
-            market,
-            option
-        )
-
+        d1 = self.model._calculate_d1(option, market)
+        d2 = self.model._calculate_d2(d1, market, option)
         return d1, d2
 
-
-
-    def delta(
-        self,
-        option: EuropeanOption,
-        market: MarketData
-    ) -> float:
+    def delta(self, option: EuropeanOption, market: MarketData) -> float:
         """
-        Calculate Delta.
+        Calculate Delta: ∂V / ∂S.
 
-        Delta = ∂V / ∂S
-
-        Measures sensitivity to underlying price.
+        Measures sensitivity to the underlying price.
         """
-
-        d1, _ = self._calculate_d1_d2(
-            option,
-            market
-        )
-
+        d1, _ = self._calculate_d1_d2(option, market)
 
         if option.option_type == "call":
-
             return norm.cdf(d1)
 
+        return norm.cdf(d1) - 1
 
-        else:
-
-            return norm.cdf(d1) - 1
-
-
-
-    def gamma(
-        self,
-        option: EuropeanOption,
-        market: MarketData
-    ) -> float:
+    def gamma(self, option: EuropeanOption, market: MarketData) -> float:
         """
-        Calculate Gamma.
+        Calculate Gamma: ∂²V / ∂S².
 
-        Gamma = ∂²V / ∂S²
-
-        Measures Delta change speed.
+        Measures the rate of change of Delta.
         """
-
-        d1, _ = self._calculate_d1_d2(
-            option,
-            market
+        d1, _ = self._calculate_d1_d2(option, market)
+        return norm.pdf(d1) / (
+            market.spot * market.volatility * np.sqrt(option.maturity)
         )
 
-
-        return (
-            norm.pdf(d1)
-            /
-            (
-                market.spot
-                *
-                market.volatility
-                *
-                np.sqrt(option.maturity)
-            )
-        )
-
-
-
-    def vega(
-        self,
-        option: EuropeanOption,
-        market: MarketData
-    ) -> float:
+    def vega(self, option: EuropeanOption, market: MarketData) -> float:
         """
-        Calculate Vega.
+        Calculate Vega: ∂V / ∂σ.
 
-        Vega = ∂V / ∂σ
-
-        Measures volatility sensitivity.
-
-        Note:
-        Usually interpreted per 1% volatility change.
+        Measures sensitivity to volatility.
         """
+        d1, _ = self._calculate_d1_d2(option, market)
+        return market.spot * norm.pdf(d1) * np.sqrt(option.maturity)
 
-        d1, _ = self._calculate_d1_d2(
-            option,
-            market
-        )
-
-
-        return (
-            market.spot
-            *
-            norm.pdf(d1)
-            *
-            np.sqrt(option.maturity)
-        )
-
-
-
-    def theta(
-        self,
-        option: EuropeanOption,
-        market: MarketData
-    ) -> float:
+    def theta(self, option: EuropeanOption, market: MarketData) -> float:
         """
-        Calculate Theta.
-
-        Theta = ∂V / ∂t
+        Calculate Theta: ∂V / ∂t.
 
         Measures time decay.
         """
+        d1, d2 = self._calculate_d1_d2(option, market)
 
-        d1, d2 = self._calculate_d1_d2(
-            option,
-            market
-        )
+        first_term = -(
+            market.spot * norm.pdf(d1) * market.volatility
+        ) / (2 * np.sqrt(option.maturity))
 
-
-        first_term = (
-            -
-            (
-                market.spot
-                *
-                norm.pdf(d1)
-                *
-                market.volatility
-            )
-            /
-            (
-                2
-                *
-                np.sqrt(option.maturity)
-            )
-        )
-
-
-        discount_factor = np.exp(
-            -market.rate
-            *
-            option.maturity
-        )
-
+        discount_factor = np.exp(-market.rate * option.maturity)
 
         if option.option_type == "call":
-
             second_term = (
-                -
-                market.rate
-                *
-                option.strike
-                *
-                discount_factor
-                *
-                norm.cdf(d2)
+                -market.rate * option.strike * discount_factor * norm.cdf(d2)
             )
-
-
         else:
-
             second_term = (
-                market.rate
-                *
-                option.strike
-                *
-                discount_factor
-                *
-                norm.cdf(-d2)
+                market.rate * option.strike * discount_factor * norm.cdf(-d2)
             )
-
 
         return first_term + second_term
 
-
-
-    def rho(
-        self,
-        option: EuropeanOption,
-        market: MarketData
-    ) -> float:
+    def rho(self, option: EuropeanOption, market: MarketData) -> float:
         """
-        Calculate Rho.
+        Calculate Rho: ∂V / ∂r.
 
-        Rho = ∂V / ∂r
-
-        Measures interest rate sensitivity.
+        Measures sensitivity to the interest rate.
         """
+        _, d2 = self._calculate_d1_d2(option, market)
 
-        _, d2 = self._calculate_d1_d2(
-            option,
-            market
-        )
-
-
-        discount_factor = np.exp(
-            -market.rate
-            *
-            option.maturity
-        )
-
+        discount_factor = np.exp(-market.rate * option.maturity)
 
         if option.option_type == "call":
-
             return (
-                option.strike
-                *
-                option.maturity
-                *
-                discount_factor
-                *
-                norm.cdf(d2)
+                option.strike * option.maturity * discount_factor * norm.cdf(d2)
             )
 
-
-        else:
-
-            return (
-                -
-                option.strike
-                *
-                option.maturity
-                *
-                discount_factor
-                *
-                norm.cdf(-d2)
-            )
+        return -(
+            option.strike * option.maturity * discount_factor * norm.cdf(-d2)
+        )

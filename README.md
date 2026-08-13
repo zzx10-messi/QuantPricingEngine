@@ -1,245 +1,172 @@
-QuantPricingEngine
-A Python-based derivatives pricing library for European options.
-QuantPricingEngine is a modular Python framework designed for derivatives pricing and risk analysis.
+# QuantPricingEngine
 
-The current version implements the Black-Scholes analytical pricing model and calculates option Greeks for European options.
+QuantPricingEngine is a modular Python project for European option pricing and risk analysis. It combines financial mathematics with software engineering practice, implementing the Black-Scholes framework in a clean, testable, and extensible structure.
 
-This project combines financial mathematics with software engineering principles and provides a foundation for future extensions such as numerical pricing methods and advanced volatility models.
+## Project Overview
 
-Features
-Current Features
-European option representation
-Black-Scholes analytical pricing model
-Option Greeks calculation
-Supported Greeks
-Delta
-Gamma
-Vega
-Theta
-Rho
-Future Development
-Binomial Tree pricing model
-Monte Carlo simulation
-Exotic option pricing
-Stochastic volatility models
-Mathematical Background
-Black-Scholes Model
+This project demonstrates a practical application of quantitative finance concepts in Python. The current implementation focuses on:
+
+- Modeling European call and put options
+- Pricing options using the Black-Scholes analytical model
+- Calculating the main option Greeks: Delta, Gamma, Vega, Theta, and Rho
+- Building a modular codebase suitable for future expansion into more advanced pricing methods
+
+## Why This Project Matters
+
+For a student applying to a Financial Engineering or Quantitative Finance graduate program, this project showcases three important capabilities:
+
+1. **Mathematical Finance Foundation**
+   - Strong understanding of derivative pricing theory and risk sensitivities
+
+2. **Programming and Engineering Skills**
+   - Clean object-oriented structure, modular package design, and test-driven development
+
+3. **Research and Extension Potential**
+   - The codebase is designed to support future work in numerical methods, stochastic models, and more complex derivatives
+
+## Core Features
+
+- European option representation with validation
+- Black-Scholes pricing for call and put options
+- Analytical Greeks calculation for risk management
+- Separate modules for instruments, market data, pricing models, and risk analysis
+- Automated tests for pricing and Greeks accuracy
+
+## Mathematical Foundation
+
+The project implements the classical Black-Scholes model for European options.
+
 For a European call option:
-C=S 
-0
-​	
- N(d 
-1
-​	
- )−Ke 
-−rT
- N(d 
-2
-​	
- )
-where:
-d 
-1
-​	
- = 
-σ 
-T
-​	
- 
-ln(S 
-0
-​	
- /K)+(r+ 
-2
-1
-​	
- σ 
-2
- )T
-​	
- 
-d 
-2
-​	
- =d 
-1
-​	
- −σ 
-T
-​	
- 
-For a European put option:
-P=Ke 
-−rT
- N(−d 
-2
-​	
- )−S 
-0
-​	
- N(−d 
-1
-​	
- )
-Model Parameters
-Symbol	Description
-S0	Current underlying asset price
-K	Strike price
-T	Time to maturity
-r	Risk-free interest rate
-σ	Volatility
-Greeks
-The library calculates the main option risk sensitivities.
-Delta
-Δ= 
-∂S
-∂V
-​	
- 
-Sensitivity to changes in the underlying asset price.
-Gamma
-Γ= 
-∂S 
-2
- 
-∂ 
-2
- V
-​	
- 
-Measures the rate of change of Delta.
-Vega
-Vega= 
-∂σ
-∂V
-​	
- 
-Sensitivity to volatility changes.
-Theta
-Θ= 
-∂t
-∂V
-​	
- 
-Measures option time decay.
-Rho
-ρ= 
-∂r
-∂V
-​	
- 
-Sensitivity to interest rate changes.
-Project Structure
-QuantPricingEngine/
 
-├── src/
-│
-│   ├── instruments/
-│   │   ├── __init__.py
-│   │   └── option.py
-│   │
-│   ├── market/
-│   │   ├── __init__.py
-│   │   └── data.py
-│   │
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   └── black_scholes.py
-│   │
-│   └── risk/
-│       ├── __init__.py
-│       └── greeks.py
-│
-├── tests/
-│
-├── main.py
-├── requirements.txt
-├── .gitignore
-└── README.md
-Installation
-Clone the repository:
-git clone <repository-url>
-Install dependencies:
+$$C = S_0N(d_1) - Ke^{-rT}N(d_2)$$
+
+For a European put option:
+
+$$P = Ke^{-rT}N(-d_2) - S_0N(-d_1)$$
+
+where:
+
+$$d_1 = \frac{\ln(S_0/K) + (r + \frac{1}{2}\sigma^2)T}{\sigma\sqrt{T}}$$
+
+$$d_2 = d_1 - \sigma\sqrt{T}$$
+
+The project also computes the main Greeks, which measure the sensitivity of option value to changes in underlying price, volatility, time, and interest rates.
+
+## Installation
+
+```bash
+git clone https://github.com/<your-username>/QuantPricingEngine.git
+cd QuantPricingEngine
+
+# Optional: create a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
-Usage
-Example:
+
+# Or install the package in editable mode (recommended for development)
+pip install -e ".[dev]"
+```
+
+## Quick Start
+
+```python
 from src.instruments import EuropeanOption
 from src.market import MarketData
 from src.models import BlackScholes
-
+from src.risk import Greeks
 
 option = EuropeanOption(
     strike=100,
     maturity=1,
-    option_type="call"
+    option_type="call",
 )
-
 
 market = MarketData(
     spot=100,
     rate=0.05,
-    volatility=0.2
+    volatility=0.2,
 )
-
 
 model = BlackScholes()
+price = model.price(option, market)
 
+greeks = Greeks(model)
 
-price = model.price(
-    option,
-    market
-)
+print(f"Price: {price:.6f}")
+print(f"Delta: {greeks.delta(option, market):.6f}")
+```
 
+You can also run the bundled example:
 
-print(price)
-Output:
-10.450584
-Testing
-This project uses pytest for automated testing.
-Run:
+```bash
+python main.py
+```
 
+Example output:
+
+```text
+Price: 10.450584
+Delta: 0.636831
+```
+
+## Project Structure
+
+```text
+QuantPricingEngine/
+├── src/
+│   ├── instruments/
+│   │   ├── __init__.py
+│   │   └── option.py
+│   ├── market/
+│   │   ├── __init__.py
+│   │   └── data.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   └── black_scholes.py
+│   └── risk/
+│       ├── __init__.py
+│       └── greeks.py
+├── tests/
+│   ├── test_black_scholes.py
+│   ├── test_greeks.py
+│   ├── test_market.py
+│   └── test_option.py
+├── main.py
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── LICENSE
+└── README.md
+```
+
+## Testing
+
+The project uses pytest for automated validation.
+
+```bash
 pytest
-Tests verify:
-Option object validation
-Black-Scholes pricing accuracy
-Greeks calculation correctness
-Design Architecture
-The project follows a modular pricing architecture:
-Financial Instrument
+```
 
-        +
+Current tests cover:
 
-Market Data
+- Option validation (strike, maturity, type)
+- Market data validation (spot, rate, volatility)
+- Black-Scholes pricing accuracy for calls and puts
+- Put-call parity
+- Greek calculation correctness for calls and puts
 
-        ↓
+## Future Development
 
-Pricing Model
+Planned extensions include:
 
-        ↓
+- Binomial tree pricing models
+- Monte Carlo simulation
+- Exotic option pricing
+- More advanced volatility and stochastic models
 
-Risk Analysis
-The pricing model layer is designed for future extensions:
-              PricingModel
+## License
 
-                    |
-
-        ----------------------------
-
-        |             |            |
-
-Black-Scholes   Binomial Tree   Monte Carlo
-Future Roadmap
-Version 0.2
-Implement Binomial Tree model
-Compare numerical and analytical pricing
-Version 0.3
-Implement Monte Carlo simulation
-Add confidence interval estimation
-Version 1.0
-Support additional derivatives
-Add advanced volatility models
-License
-MIT License
-
-
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
