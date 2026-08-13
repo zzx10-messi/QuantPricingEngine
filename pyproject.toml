@@ -36,8 +36,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/<your-username>/QuantPricingEngine"
-Repository = "https://github.com/<your-username>/QuantPricingEngine"
+Homepage = "https://github.com/zzx10-messi/QuantPricingEngine"
+Repository = "https://github.com/zzx10-messi/QuantPricingEngine"
 
 [tool.setuptools.packages.find]
 where = ["."]
