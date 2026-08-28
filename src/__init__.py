@@ -1,3 +1,0 @@
-"""
-QuantPricingEngine source package.
-"""

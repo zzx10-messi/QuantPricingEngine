@@ -1,6 +1,6 @@
 import pytest
 
-from src.market import MarketData
+from option_pricing.common import MarketData
 
 
 def test_valid_market_data():
@@ -24,13 +24,9 @@ def test_invalid_spot():
         )
 
 
-def test_invalid_rate():
-    with pytest.raises(ValueError):
-        MarketData(
-            spot=100,
-            rate=-0.01,
-            volatility=0.2,
-        )
+def test_negative_rate_is_supported():
+    market = MarketData(spot=100, rate=-0.01, volatility=0.2)
+    assert market.rate == -0.01
 
 
 def test_invalid_volatility():

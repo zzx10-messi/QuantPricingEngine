@@ -1,6 +1,7 @@
 import pytest
 
-from src.instruments import EuropeanOption
+from option_pricing.common import OptionType
+from option_pricing.products import EuropeanOption
 
 
 def test_create_call_option():
@@ -12,7 +13,7 @@ def test_create_call_option():
 
     assert option.strike == 100
     assert option.maturity == 1
-    assert option.option_type == "call"
+    assert option.option_type is OptionType.CALL
 
 
 def test_create_put_option():
@@ -23,7 +24,7 @@ def test_create_put_option():
     )
     assert option.strike == 100
     assert option.maturity == 1
-    assert option.option_type == "put"
+    assert option.option_type is OptionType.PUT
 
 
 def test_invalid_strike():

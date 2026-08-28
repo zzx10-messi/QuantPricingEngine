@@ -1,6 +1,9 @@
 # QuantPricingEngine
 
-QuantPricingEngine is a modular Python project for European option pricing and risk analysis. It combines financial mathematics with software engineering practice, implementing the Black-Scholes framework in a clean, testable, and extensible structure.
+QuantPricingEngine is a pricing-focused Python library for option products. The
+current milestone implements European options, Black-Scholes analytical pricing,
+Greeks, and robust implied-volatility inversion. Tree, Monte Carlo, and finite
+difference engines are planned as later pricing milestones.
 
 ## Project Overview
 
@@ -29,7 +32,9 @@ For a student applying to a Financial Engineering or Quantitative Finance gradua
 - European option representation with validation
 - Black-Scholes pricing for call and put options
 - Analytical Greeks calculation for risk management
-- Separate modules for instruments, market data, pricing models, and risk analysis
+- Separate modules for products, analytical pricing, analytics, numerical methods,
+  and shared types
+- Implied volatility using Brent, bisection, or safeguarded Newton methods
 - Automated tests for pricing and Greeks accuracy
 
 ## Mathematical Foundation
@@ -72,10 +77,10 @@ pip install -e ".[dev]"
 ## Quick Start
 
 ```python
-from src.instruments import EuropeanOption
-from src.market import MarketData
-from src.models import BlackScholes
-from src.risk import Greeks
+from option_pricing.analytical import BlackScholes
+from option_pricing.analytics import Greeks, ImpliedVolatility
+from option_pricing.common import MarketData
+from option_pricing.products import EuropeanOption
 
 option = EuropeanOption(
     strike=100,
@@ -96,6 +101,9 @@ greeks = Greeks(model)
 
 print(f"Price: {price:.6f}")
 print(f"Delta: {greeks.delta(option, market):.6f}")
+
+implied_vol = ImpliedVolatility(model).solve(option, market, price)
+print(f"Implied volatility: {implied_vol:.6f}")
 ```
 
 You can also run the bundled example:
@@ -115,25 +123,28 @@ Delta: 0.636831
 
 ```text
 QuantPricingEngine/
-├── src/
-│   ├── instruments/
-│   │   ├── __init__.py
-│   │   └── option.py
-│   ├── market/
-│   │   ├── __init__.py
-│   │   └── data.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── base.py
+├── option_pricing/
+│   ├── products/
+│   │   └── european.py
+│   ├── analytical/
 │   │   └── black_scholes.py
-│   └── risk/
-│       ├── __init__.py
-│       └── greeks.py
+│   ├── analytics/
+│   │   ├── greeks.py
+│   │   └── implied_volatility.py
+│   ├── numerical/
+│   │   └── root_finding.py
+│   └── common/
+│       ├── enums.py
+│       ├── exceptions.py
+│       ├── market.py
+│       ├── result.py
+│       └── validation.py
 ├── tests/
 │   ├── test_black_scholes.py
 │   ├── test_greeks.py
 │   ├── test_market.py
-│   └── test_option.py
+│   ├── test_option.py
+│   └── test_implied_volatility.py
 ├── main.py
 ├── pyproject.toml
 ├── pytest.ini
@@ -157,6 +168,8 @@ Current tests cover:
 - Black-Scholes pricing accuracy for calls and puts
 - Put-call parity
 - Greek calculation correctness for calls and puts
+- Implied-volatility convergence, no-arbitrage bounds, bracket expansion, and
+  difficult Newton cases
 
 ## Future Development
 
@@ -165,7 +178,10 @@ Planned extensions include:
 - Binomial tree pricing models
 - Monte Carlo simulation
 - Exotic option pricing
-- More advanced volatility and stochastic models
+- Finite-difference pricing
+
+The project deliberately focuses on pricing engines. Volatility-surface
+construction is outside the current scope.
 
 ## License
 

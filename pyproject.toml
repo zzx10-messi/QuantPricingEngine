@@ -41,7 +41,7 @@ Repository = "https://github.com/zzx10-messi/QuantPricingEngine"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*"]
+include = ["option_pricing*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

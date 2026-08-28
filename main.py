@@ -1,7 +1,7 @@
-from src.instruments import EuropeanOption
-from src.market import MarketData
-from src.models import BlackScholes
-from src.risk import Greeks
+from option_pricing.analytical import BlackScholes
+from option_pricing.analytics import Greeks
+from option_pricing.common import MarketData
+from option_pricing.products import EuropeanOption
 
 
 def main():
