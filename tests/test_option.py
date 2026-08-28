@@ -52,3 +52,16 @@ def test_invalid_option_type():
             maturity=1,
             option_type="straddle",
         )
+
+
+def test_non_string_option_type_is_rejected_consistently():
+    with pytest.raises(ValueError, match="option_type"):
+        EuropeanOption(strike=100, maturity=1, option_type=None)
+
+
+@pytest.mark.parametrize("field", ["strike", "maturity"])
+def test_boolean_contract_inputs_are_rejected(field):
+    values = {"strike": 100, "maturity": 1, "option_type": "call"}
+    values[field] = True
+    with pytest.raises(ValueError):
+        EuropeanOption(**values)

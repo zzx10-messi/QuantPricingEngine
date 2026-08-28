@@ -17,6 +17,6 @@ class EuropeanOption:
         validate_positive("maturity", self.maturity)
         try:
             option_type = OptionType(self.option_type)
-        except ValueError as exc:
+        except (TypeError, ValueError) as exc:
             raise ValueError("option_type must be 'call' or 'put'.") from exc
         object.__setattr__(self, "option_type", option_type)

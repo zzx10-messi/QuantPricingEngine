@@ -1,8 +1,14 @@
 from collections.abc import Callable
+import math
+from numbers import Real
 
 from scipy.optimize import brentq
 
-from option_pricing.common import ConvergenceError, RootFindingResult
+from option_pricing.common import (
+    ConvergenceError,
+    RootFindingMethod,
+    RootFindingResult,
+)
 
 
 ScalarFunction = Callable[[float], float]
@@ -20,41 +26,92 @@ def find_root(
     max_iter: int = 200,
 ) -> RootFindingResult:
     """Find a scalar root using a bracketed, convergence-checked method."""
+    try:
+        selected_method = RootFindingMethod(method)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Unknown root-finding method: {method}") from exc
+    if selected_method is RootFindingMethod.NEWTON and derivative is None:
+        raise ValueError("Newton's method requires a derivative.")
+    if initial_guess is not None and not _is_finite_real(initial_guess):
+        raise ValueError("initial_guess must be a finite real number.")
+    if not _is_finite_real(x_tol) or not _is_finite_real(f_tol):
+        raise ValueError("x_tol and f_tol must be finite real numbers.")
     if x_tol <= 0 or f_tol <= 0:
         raise ValueError("x_tol and f_tol must be positive.")
-    if max_iter <= 0:
-        raise ValueError("max_iter must be positive.")
+    if not isinstance(max_iter, int) or isinstance(max_iter, bool) or max_iter <= 0:
+        raise ValueError("max_iter must be a positive integer.")
 
     low, high = bracket
+    if not _is_finite_real(low) or not _is_finite_real(high):
+        raise ValueError("bracket endpoints must be finite real numbers.")
     if not low < high:
         raise ValueError("bracket must satisfy low < high.")
-    f_low, f_high = function(low), function(high)
+    checked_function = _checked(function, "function")
+    f_low, f_high = checked_function(low), checked_function(high)
     if f_low == 0:
-        return RootFindingResult(low, 0, 0.0, method)
+        return RootFindingResult(float(low), 0, 0.0, selected_method.value)
     if f_high == 0:
-        return RootFindingResult(high, 0, 0.0, method)
+        return RootFindingResult(float(high), 0, 0.0, selected_method.value)
     if f_low * f_high > 0:
         raise ValueError("The root is not bracketed.")
 
-    if method == "brent":
+    if selected_method is RootFindingMethod.BRENT:
         root, details = brentq(
-            function, low, high, xtol=x_tol, maxiter=max_iter, full_output=True
+            checked_function,
+            low,
+            high,
+            xtol=x_tol,
+            maxiter=max_iter,
+            full_output=True,
+            disp=False,
         )
         if not details.converged:
             raise ConvergenceError("Brent's method did not converge.")
+        residual = abs(checked_function(root))
+        if residual > f_tol:
+            raise ConvergenceError(
+                "Brent's method met x_tol but not f_tol; use a smaller x_tol."
+            )
         return RootFindingResult(
-            float(root), details.iterations, abs(function(root)), method
+            float(root), details.iterations, residual, selected_method.value
         )
-    if method == "bisection":
-        return _bisection(function, low, high, f_low, x_tol, f_tol, max_iter)
-    if method == "newton":
-        if derivative is None:
-            raise ValueError("Newton's method requires a derivative.")
-        guess = (low + high) / 2 if initial_guess is None else initial_guess
-        return _safeguarded_newton(
-            function, derivative, low, high, f_low, guess, x_tol, f_tol, max_iter
+    if selected_method is RootFindingMethod.BISECTION:
+        return _bisection(
+            checked_function, low, high, f_low, x_tol, f_tol, max_iter
         )
-    raise ValueError(f"Unknown root-finding method: {method}")
+
+    assert derivative is not None
+    checked_derivative = _checked(derivative, "derivative")
+    guess = (low + high) / 2 if initial_guess is None else initial_guess
+    return _safeguarded_newton(
+        checked_function,
+        checked_derivative,
+        low,
+        high,
+        f_low,
+        guess,
+        x_tol,
+        f_tol,
+        max_iter,
+    )
+
+
+def _is_finite_real(value: object) -> bool:
+    return (
+        not isinstance(value, bool)
+        and isinstance(value, Real)
+        and math.isfinite(value)
+    )
+
+
+def _checked(function: ScalarFunction, name: str) -> ScalarFunction:
+    def evaluate(value: float) -> float:
+        result = function(value)
+        if not _is_finite_real(result):
+            raise ValueError(f"{name} returned a non-finite real value at x={value}.")
+        return float(result)
+
+    return evaluate
 
 
 def _bisection(
@@ -69,7 +126,7 @@ def _bisection(
     for iteration in range(1, max_iter + 1):
         mid = (low + high) / 2
         f_mid = function(mid)
-        if abs(f_mid) <= f_tol or (high - low) / 2 <= x_tol:
+        if abs(f_mid) <= f_tol and (high - low) / 2 <= x_tol:
             return RootFindingResult(mid, iteration, abs(f_mid), "bisection")
         if f_low * f_mid < 0:
             high = mid

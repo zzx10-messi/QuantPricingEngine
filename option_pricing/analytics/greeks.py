@@ -7,7 +7,7 @@ from option_pricing.products import EuropeanOption
 
 
 class Greeks:
-    """Analytical Black-Scholes Greeks."""
+    """Analytical Black-Scholes Greeks for strictly positive volatility."""
 
     def __init__(self, model: BlackScholes):
         self.model = model

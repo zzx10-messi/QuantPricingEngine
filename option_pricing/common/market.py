@@ -1,11 +1,19 @@
 from dataclasses import dataclass, replace
 
-from option_pricing.common.validation import validate_finite, validate_positive
+from option_pricing.common.validation import (
+    validate_finite,
+    validate_nonnegative,
+    validate_positive,
+)
 
 
 @dataclass(frozen=True)
 class MarketData:
-    """Market inputs used by the currently implemented pricing models."""
+    """Market inputs used by the currently implemented pricing models.
+
+    Zero volatility is accepted for deterministic-limit pricing and as an
+    input environment for implied-volatility inversion.
+    """
 
     spot: float
     rate: float
@@ -14,7 +22,7 @@ class MarketData:
     def __post_init__(self) -> None:
         validate_positive("spot", self.spot)
         validate_finite("rate", self.rate)
-        validate_positive("volatility", self.volatility)
+        validate_nonnegative("volatility", self.volatility)
 
     def with_volatility(self, volatility: float) -> "MarketData":
         return replace(self, volatility=volatility)

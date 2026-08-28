@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quant-pricing-engine"
-version = "0.2.0"
+version = "0.2.1"
 description = "A modular Python project for European option pricing and risk analysis."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -46,3 +46,7 @@ include = ["option_pricing*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[[tool.mypy.overrides]]
+module = ["scipy.*"]
+ignore_missing_imports = true

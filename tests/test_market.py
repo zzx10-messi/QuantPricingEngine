@@ -36,3 +36,16 @@ def test_invalid_volatility():
             rate=0.05,
             volatility=-0.2,
         )
+
+
+def test_zero_volatility_is_supported():
+    market = MarketData(spot=100, rate=0.05, volatility=0.0)
+    assert market.volatility == 0.0
+
+
+@pytest.mark.parametrize("field", ["spot", "rate", "volatility"])
+def test_boolean_market_inputs_are_rejected(field):
+    values = {"spot": 100, "rate": 0.05, "volatility": 0.2}
+    values[field] = True
+    with pytest.raises(ValueError):
+        MarketData(**values)
